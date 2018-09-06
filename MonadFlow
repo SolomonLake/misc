@@ -1,0 +1,40 @@
+// @flow
+
+export class Monad<T> {
+  t: T;
+  constructor(t: T) {
+    this.t = t;
+  }
+  bind<B>(fn: T => B): Monad<B> {
+    const b: B = fn(this.t);
+    return new Monad(b);
+  }
+}
+export function monad<T>(t: T): Monad<T> {
+  return new Monad(t);
+}
+
+type BaseStateMonadObject = {
+  bail: boolean
+};
+
+export class StateMonad<State: BaseStateMonadObject> extends Monad<State> {
+  state: State;
+  constructor(state: State) {
+    super(state);
+    this.state = state;
+  }
+  execute(fn: State => State): StateMonad<State> {
+    if (this.state.bail) {
+      const monad = this.bind(fn);
+      return ((monad: any): StateMonad<State>);
+    } else {
+      return this;
+    }
+  }
+}
+export function stateMonad<State: BaseStateMonadObject>(
+  state: State
+): StateMonad<State> {
+  return new StateMonad(state);
+}
